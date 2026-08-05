@@ -1,0 +1,10 @@
+[package]
+name        = "lex-ag-ui"
+version     = "0.1.0"
+lex         = "0.10.7"
+description = "AG-UI (Agent-User Interaction Protocol) event types and an SSE bridge from lex-llm's Step/Delta stream, for Lex agent servers."
+
+[dependencies]
+lex-schema = { git = "https://github.com/alpibrusl/lex-schema" }
+lex-llm    = { git = "https://github.com/alpibrusl/lex-llm" }
+lex-web    = { git = "https://github.com/alpibrusl/lex-web" }
