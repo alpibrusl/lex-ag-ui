@@ -2,10 +2,11 @@
 name        = "lex-ag-ui"
 version     = "0.1.0"
 lex         = "0.10.7"
-description = "AG-UI (Agent-User Interaction Protocol) event types and an SSE bridge from lex-llm's Step/Delta stream, for Lex agent servers."
+description = "AG-UI (Agent-User Interaction Protocol) event types and SSE bridges -- from lex-llm's Step/Delta stream, from any A2A agent's tasks/sendSubscribe, and from A2UI messages -- for Lex agent servers."
 
 [dependencies]
 lex-schema = { git = "https://github.com/alpibrusl/lex-schema" }
 lex-llm    = { git = "https://github.com/alpibrusl/lex-llm" }
 lex-web    = { git = "https://github.com/alpibrusl/lex-web" }
 lex-a2ui   = { git = "https://github.com/alpibrusl/lex-a2ui" }
+lex-agent  = { git = "https://github.com/alpibrusl/lex-agent" }

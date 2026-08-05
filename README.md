@@ -34,11 +34,28 @@ thrown away one layer up.
   the actual translation. **Not lazy end-to-end** — see below.
 - **`src/sse.lex`** — `to_sse(Iter[AguiEvent]) -> stream.StreamResponse`,
   a one-line wrapper over `lex-web`'s existing `event_stream`.
-- **`src/mount.lex`** — `add_to(router, path, run)`, the actual "one call
-  to integrate AG-UI into any Lex agent server" entry point. `run` just
-  needs to produce an `Iter[d.Step]` — works with `lex-llm`'s `run_loop`
-  directly, or a hand-rolled equivalent, whether or not the caller uses
-  `lex-agent`'s `AgentDef` at all.
+- **`src/mount.lex`** — `add_to_events(router, path, run: (Ctx) -> Iter[AguiEvent])`
+  is the generic primitive: wires `router.route_stream` + `sse.to_sse` for
+  any handler that already produces `AguiEvent`s, regardless of what's
+  driving it (`lex-llm`, a hand-rolled adapter, `a2a_bridge.lex` below —
+  anything). `add_to(router, path, run: (Ctx) -> Iter[d.Step])` is the
+  `lex-llm`-specific convenience wrapper built on top of it.
+- **`src/a2ui_bridge.lex`** — `custom_event(msg :: A2uiMessage) -> AguiEvent`,
+  wraps an A2UI message (`lex-a2ui`) as an AG-UI `CUSTOM` event named
+  `"a2ui"`, matching the documented real-world A2UI-over-AG-UI pattern.
+- **`src/a2a_bridge.lex`** — `from_status_updates`/`subscribe_as_agui`:
+  bridges **any** A2A agent's `tasks/sendSubscribe` stream into AG-UI
+  events. This is the "generalize once" piece: `lex-agent/src/mount.lex`
+  already auto-detects `tasks/sendSubscribe` and serves it as SSE for
+  *every* `AgentDef`-mounted agent, with zero code in `lex-agent`,
+  `lex-soft`, or any individual pack. `subscribe_as_agui` is a pure
+  client-side translator on top of `lex-agent/src/client.lex`'s existing
+  `subscribe`, so any agent-backed `lex-pack-*` persona gets AG-UI
+  streaming just by pointing this at its base URL — no per-pack changes.
+  It's coarser than a bespoke adapter (task-lifecycle transitions, not
+  token/tool-call level — A2A's `StatusUpdate` has no vocabulary for tool
+  calls), so write one of those instead when finer detail is needed, the
+  way `lex-oms-agent`'s `agui_adapter.lex` does.
 
 ## `lex test` does not actually gate on assertion failures — read this
 
@@ -133,10 +150,29 @@ let events := agui_bridge.from_llm_steps(steps, thread_id, run_id)
 agui_sse.to_sse(events)
 ```
 
+Any A2A agent, zero per-agent code — including any `lex-soft` pack
+persona built as a `pack.DomainPack`:
+
+```lex
+import "lex-ag-ui/src/a2a_bridge" as agui_a2a
+import "lex-agent/src/client" as a2a_client
+import "lex-agent/src/message" as msg
+
+let m := { message_id: "m1", role: RoleUser, parts: [TextPart("book this shipment")], context_id: "ctx_1" }
+let result := agui_a2a.subscribe_as_agui(
+  "https://custody-agent.example.internal",
+  m, a2a_client.default_opts(), api_key, "th1", "r1",
+)
+# result :: Result[List[AguiEvent], Str] -- feed straight to sse.to_sse via
+# add_to_events, or forward as CUSTOM/"a2ui" events, etc.
+```
+
 ## Status
 
 v1, unreleased. Built as phase 1 of a larger plan to stream
 `lex-oms-agent` (and eventually every `lex-agent` persona) to
-`lex-portal` over AG-UI instead of today's fetch-then-JSON polling. Not
-yet wired into any agent server — see this repo's issues for the
-integration work.
+`lex-portal` over AG-UI instead of today's fetch-then-JSON polling.
+Wired into `lex-oms-agent` today via a bespoke adapter
+(`agui_adapter.lex` + `add_to_events`); every other `lex-agent`-based
+server — including any agent-backed `lex-pack-*` persona — gets AG-UI
+streaming for free via `a2a_bridge.lex`, no server-side change required.
