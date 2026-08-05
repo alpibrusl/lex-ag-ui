@@ -8,3 +8,4 @@ description = "AG-UI (Agent-User Interaction Protocol) event types and an SSE br
 lex-schema = { git = "https://github.com/alpibrusl/lex-schema" }
 lex-llm    = { git = "https://github.com/alpibrusl/lex-llm" }
 lex-web    = { git = "https://github.com/alpibrusl/lex-web" }
+lex-a2ui   = { git = "https://github.com/alpibrusl/lex-a2ui" }
