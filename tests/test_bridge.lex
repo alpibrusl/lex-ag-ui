@@ -66,7 +66,22 @@ fn suite_pure() -> List[Result[Unit, Str]] {
   [test_text_only_run(), test_tool_call_run(), test_no_stepdone_still_finishes()]
 }
 
+# `lex test` only checks whether `run_all` raises a runtime error --
+# it discards the return value entirely (lex-cli's test_runner.rs calls
+# `vm.call("run_all", vec![])` and never inspects the result). A plain
+# `count_failures(...)` return, the convention this repo's own
+# `lex init` scaffold generates, is silently non-gating: it always
+# looks like "pass" to `lex test`/`lex ci` no matter how many assertions
+# actually failed. `1 / 0` is a real Lex runtime error (confirmed:
+# `lex run` exits nonzero on integer division by zero) -- triggering it
+# only when there are failures makes this suite an actual CI gate.
 fn run_all() -> Int {
-  count_failures(suite_pure())
+  let failures := count_failures(suite_pure())
+  let _crash_if_failed := if failures > 0 {
+    1 / 0
+  } else {
+    0
+  }
+  failures
 }
 

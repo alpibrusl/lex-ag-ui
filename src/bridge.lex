@@ -197,11 +197,7 @@ fn from_llm_steps(steps :: Iter[d.Step], thread_id :: Str, run_id :: Str) -> Ite
   let step_list := iter.to_list(steps)
   let acc0 := { events: no_events(), st: st0, done: false }
   let folded := list.fold(step_list, acc0, fold_step)
-  let closing := if folded.done {
-    folded.events
-  } else {
-    list.concat(folded.events, [run_finished_event(folded.st)])
-  }
+  let closing := list.concat(folded.events, [run_finished_event(folded.st)])
   let all_events := list.concat([ev.RunStarted({ thread_id: thread_id, run_id: run_id })], closing)
   iter.from_list(all_events)
 }

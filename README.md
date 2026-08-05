@@ -34,6 +34,35 @@ thrown away one layer up.
   the actual translation. **Not lazy end-to-end** — see below.
 - **`src/sse.lex`** — `to_sse(Iter[AguiEvent]) -> stream.StreamResponse`,
   a one-line wrapper over `lex-web`'s existing `event_stream`.
+- **`src/mount.lex`** — `add_to(router, path, run)`, the actual "one call
+  to integrate AG-UI into any Lex agent server" entry point. `run` just
+  needs to produce an `Iter[d.Step]` — works with `lex-llm`'s `run_loop`
+  directly, or a hand-rolled equivalent, whether or not the caller uses
+  `lex-agent`'s `AgentDef` at all.
+
+## `lex test` does not actually gate on assertion failures — read this
+
+Confirmed against `lex-cli`'s own source
+(`crates/lex-cli/src/test_runner.rs`): `lex test` calls `run_all` and
+only checks whether the call *raises a runtime error* — it discards
+`run_all`'s return value entirely. The `count_failures(suite_pure())`
+pattern `lex init` itself scaffolds (and every test file in this repo,
+and `lex-oms`'s existing test suite, followed) **always reports "pass"
+to `lex test`/`lex ci`, no matter how many assertions actually fail.**
+
+This isn't theoretical — building this package's `from_llm_steps`, a
+real bug (`RUN_FINISHED` was never appended after a normal `StepDone`)
+shipped past `lex check --strict`, `lex fmt --check`, and `lex test`
+all reporting green simultaneously. It only surfaced once caught
+manually via `lex run tests/test_bridge.lex run_all` and inspecting the
+returned count by hand.
+
+Every `run_all` in this repo now forces a genuine runtime error
+(`1 / 0` — confirmed to actually raise `integer division by zero` and
+exit nonzero) when `count_failures(...) > 0`, so `lex test`/`lex ci`
+are real gates here. This is worth fixing upstream in `lex-init`'s
+scaffold and in any other repo using the old convention — `lex-oms`'s
+already-merged `mifid_report` tests have the same silent-pass gap.
 
 ## Wire format caveat
 
