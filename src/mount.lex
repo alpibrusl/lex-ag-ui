@@ -62,8 +62,8 @@ fn resolve_thread_id(c :: ctx.Ctx) -> [random] Str {
 # The generic primitive -- see module doc. `run` produces the reply's
 # AG-UI event stream directly; how it gets there is entirely the
 # caller's business.
-fn add_to_events(r :: router.Router, path :: Str, run :: (ctx.Ctx) -> [io, time, crypto, random, sql, fs_read, fs_write, net, concurrent, llm, proc] Iter[ev.AguiEvent]) -> router.Router {
-  router.route_stream(r, "POST", path, fn (c :: ctx.Ctx) -> [io, time, crypto, random, sql, fs_read, fs_write, net, concurrent, llm, proc] stream.StreamResponse {
+fn add_to_events(r :: router.Router, path :: Str, run :: (ctx.Ctx) -> [io, time, crypto, random, sql, fs_read, fs_write, net, concurrent, llm, proc, approval] Iter[ev.AguiEvent]) -> router.Router {
+  router.route_stream(r, "POST", path, fn (c :: ctx.Ctx) -> [io, time, crypto, random, sql, fs_read, fs_write, net, concurrent, llm, proc, approval] stream.StreamResponse {
     sse.to_sse(run(c))
   })
 }
@@ -72,8 +72,8 @@ fn add_to_events(r :: router.Router, path :: Str, run :: (ctx.Ctx) -> [io, time,
 # `lex-llm/src/agent.lex`'s `run_loop`, which already returns
 # `Iter[d.Step]`. run_id is always fresh per request -- an AG-UI "run"
 # is one request/response cycle by definition.
-fn add_to(r :: router.Router, path :: Str, run :: (ctx.Ctx) -> [io, time, crypto, random, sql, fs_read, fs_write, net, concurrent, llm, proc] Iter[d.Step]) -> router.Router {
-  add_to_events(r, path, fn (c :: ctx.Ctx) -> [io, time, crypto, random, sql, fs_read, fs_write, net, concurrent, llm, proc] Iter[ev.AguiEvent] {
+fn add_to(r :: router.Router, path :: Str, run :: (ctx.Ctx) -> [io, time, crypto, random, sql, fs_read, fs_write, net, concurrent, llm, proc, approval] Iter[d.Step]) -> router.Router {
+  add_to_events(r, path, fn (c :: ctx.Ctx) -> [io, time, crypto, random, sql, fs_read, fs_write, net, concurrent, llm, proc, approval] Iter[ev.AguiEvent] {
     let thread_id := resolve_thread_id(c)
     let run_id := crypto.random_str_hex(8)
     bridge.from_llm_steps(run(c), thread_id, run_id)
