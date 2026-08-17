@@ -39,7 +39,7 @@ fn run_all() -> Int {
   0
 }
 
-fn fake_run(_c :: ctx.Ctx) -> [io, time, crypto, random, sql, fs_read, fs_write, net, concurrent, llm, proc] Iter[d.Step] {
+fn fake_run(_c :: ctx.Ctx) -> [io, time, crypto, random, sql, fs_read, fs_write, net, concurrent, llm, proc, approval] Iter[d.Step] {
   iter.from_list([StepDelta(TextChunk("hi")), StepDone(AssistantMsg("hi", []))])
 }
 
@@ -51,7 +51,7 @@ fn fake_request() -> ctx.RawRequest {
   { body: "", method: "POST", path: "/agui/th_1", query: "", headers: map.new() }
 }
 
-fn intg_mount_streams_agui() -> [io, time, crypto, random, sql, fs_read, fs_write, net, concurrent, llm, proc] Result[Unit, Str] {
+fn intg_mount_streams_agui() -> [io, time, crypto, random, sql, fs_read, fs_write, net, concurrent, llm, proc, approval] Result[Unit, Str] {
   match router.dispatch_outcome(app(), fake_request()) {
     DPlain(r) => Err(str.concat("expected a streaming response, got a plain one (status ", str.concat(int.to_str(r.status), ")"))),
     DStream(s) => match check("status 200", s.status == 200) {
@@ -65,7 +65,7 @@ fn intg_mount_streams_agui() -> [io, time, crypto, random, sql, fs_read, fs_writ
   }
 }
 
-fn integration_main() -> [io, time, crypto, random, sql, fs_read, fs_write, net, concurrent, llm, proc] Int {
+fn integration_main() -> [io, time, crypto, random, sql, fs_read, fs_write, net, concurrent, llm, proc, approval] Int {
   match intg_mount_streams_agui() {
     Ok(_) => {
       let __lex_discard := io.print("ok  intg_mount_streams_agui")
