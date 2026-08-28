@@ -176,3 +176,9 @@ Wired into `lex-oms-agent` today via a bespoke adapter
 (`agui_adapter.lex` + `add_to_events`); every other `lex-agent`-based
 server — including any agent-backed `lex-pack-*` persona — gets AG-UI
 streaming for free via `a2a_bridge.lex`, no server-side change required.
+
+## License
+
+Copyright (c) 2026 lex-ag-ui contributors.
+
+Licensed under the [EUPL-1.2](LICENSE) — the European Union Public Licence, as used across the `lex-*` ecosystem.
