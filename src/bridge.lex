@@ -165,6 +165,7 @@ fn delta_events(delta :: d.Delta, st :: BridgeState) -> StepOutcome {
     ToolArgChunk(id, chunk) => { events: [ev.ToolCallArgs({ tool_call_id: id, delta: chunk })], st: st, is_final: false },
     FinishDelta(_) => finish_delta_events(st),
     UsageDelta(_) => { events: no_events(), st: st, is_final: false },
+    ThinkingDelta(_) => { events: no_events(), st: st, is_final: false },
   }
 }
 
